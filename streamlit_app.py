@@ -24,21 +24,18 @@ def read_notes():
 def write_notes(data):
     NOTES_FILE.write_text(json.dumps(data, indent=2))
 
-
 # -----------------------------
 # Calendar Helper
 # -----------------------------
 def get_month_matrix(year, month):
-    cal = pycal.Calendar(firstweekday=0)  # Monday first
+    cal = pycal.Calendar(firstweekday=0)
     return cal.monthdayscalendar(year, month)
-
 
 # -----------------------------
 # Page Setup
 # -----------------------------
 st.set_page_config(page_title="Diary + Calendar", layout="wide")
 st.title("📅 Daily Diary — Calendar View")
-
 
 # -----------------------------
 # Session State
@@ -52,12 +49,10 @@ if "cal_year" not in st.session_state:
 if "cal_month" not in st.session_state:
     st.session_state.cal_month = date.today().month
 
-
 # -----------------------------
 # Load Notes
 # -----------------------------
 all_notes = read_notes()
-
 
 # -----------------------------
 # Calendar UI (Left Column)
@@ -81,7 +76,7 @@ with left:
                 month -= 1
             st.session_state.cal_year = year
             st.session_state.cal_month = month
-            st.experimental_rerun()
+            st.rerun()
 
     with c2:
         st.write(f"**{pycal.month_name[month]} {year}**")
@@ -95,7 +90,7 @@ with left:
                 month += 1
             st.session_state.cal_year = year
             st.session_state.cal_month = month
-            st.experimental_rerun()
+            st.rerun()
 
     # Days of week header
     dow = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -110,7 +105,7 @@ with left:
         cols = st.columns(7)
         for i, daynum in enumerate(week):
             if daynum == 0:
-                cols[i].write("")  # empty day
+                cols[i].write("")  
             else:
                 d = date(year, month, daynum)
                 dkey = d.isoformat()
@@ -121,15 +116,10 @@ with left:
                 if note_exists:
                     label += " ●"
 
-                if d == st.session_state.selected_date:
-                    b = cols[i].button(f"[{label}]", key=f"btn_{dkey}")
-                else:
-                    b = cols[i].button(label, key=f"btn_{dkey}")
-
+                b = cols[i].button(label, key=f"day_{dkey}")
                 if b:
                     st.session_state.selected_date = d
-                    st.experimental_rerun()
-
+                    st.rerun()
 
 # -----------------------------
 # Diary Editor (Right Column)
@@ -141,9 +131,9 @@ with right:
     st.write(f"### {selected.strftime('%A, %d %B %Y')}")
 
     dkey = selected.isoformat()
-    existing = all_notes.get(dkey, "")
+    existing_text = all_notes.get(dkey, "")
 
-    text = st.text_area("Write your entry:", value=existing, height=300)
+    text = st.text_area("Write your entry:", value=existing_text, height=300)
 
     if st.button("Save Entry"):
         all_notes[dkey] = text
