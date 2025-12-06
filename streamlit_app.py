@@ -97,4 +97,55 @@ with left:
             st.session_state.cal_month = month
             st.experimental_rerun()
 
-    # Days of week hea
+    # Days of week header
+    dow = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    cols = st.columns(7)
+    for i in range(7):
+        cols[i].write(f"**{dow[i]}**")
+
+    # Month matrix
+    matrix = get_month_matrix(year, month)
+
+    for week in matrix:
+        cols = st.columns(7)
+        for i, daynum in enumerate(week):
+            if daynum == 0:
+                cols[i].write("")  # empty day
+            else:
+                d = date(year, month, daynum)
+                dkey = d.isoformat()
+
+                note_exists = dkey in all_notes
+
+                label = str(daynum)
+                if note_exists:
+                    label += " ●"
+
+                if d == st.session_state.selected_date:
+                    b = cols[i].button(f"[{label}]", key=f"btn_{dkey}")
+                else:
+                    b = cols[i].button(label, key=f"btn_{dkey}")
+
+                if b:
+                    st.session_state.selected_date = d
+                    st.experimental_rerun()
+
+
+# -----------------------------
+# Diary Editor (Right Column)
+# -----------------------------
+with right:
+    st.subheader("Diary Entry")
+
+    selected = st.session_state.selected_date
+    st.write(f"### {selected.strftime('%A, %d %B %Y')}")
+
+    dkey = selected.isoformat()
+    existing = all_notes.get(dkey, "")
+
+    text = st.text_area("Write your entry:", value=existing, height=300)
+
+    if st.button("Save Entry"):
+        all_notes[dkey] = text
+        write_notes(all_notes)
+        st.success("Saved!")
