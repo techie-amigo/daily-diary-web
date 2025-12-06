@@ -2,6 +2,7 @@ import streamlit as st
 import json
 from datetime import date
 from pathlib import Path
+import calendar as pycal
 
 # -----------------------------
 # Storage
@@ -23,42 +24,77 @@ def read_notes():
 def write_notes(data):
     NOTES_FILE.write_text(json.dumps(data, indent=2))
 
+
+# -----------------------------
+# Calendar Helper
+# -----------------------------
+def get_month_matrix(year, month):
+    cal = pycal.Calendar(firstweekday=0)  # Monday first
+    return cal.monthdayscalendar(year, month)
+
+
 # -----------------------------
 # Page Setup
 # -----------------------------
-st.set_page_config(page_title="Daily Diary", layout="centered")
-st.title("Daily Diary — Basic Version")
+st.set_page_config(page_title="Diary + Calendar", layout="wide")
+st.title("📅 Daily Diary — Calendar View")
+
 
 # -----------------------------
-# Select Date
+# Session State
 # -----------------------------
-chosen_date = st.date_input("Select a date", value=date.today())
-dkey = chosen_date.isoformat()
+if "selected_date" not in st.session_state:
+    st.session_state.selected_date = date.today()
 
-# load saved notes
+if "cal_year" not in st.session_state:
+    st.session_state.cal_year = date.today().year
+
+if "cal_month" not in st.session_state:
+    st.session_state.cal_month = date.today().month
+
+
+# -----------------------------
+# Load Notes
+# -----------------------------
 all_notes = read_notes()
-existing_text = all_notes.get(dkey, "")
+
 
 # -----------------------------
-# Text Area for Note
+# Calendar UI (Left Column)
 # -----------------------------
-text = st.text_area("Write your diary entry:", value=existing_text, height=300)
+left, right = st.columns([1.4, 2])
 
-# -----------------------------
-# Save Button
-# -----------------------------
-if st.button("Save"):
-    all_notes[dkey] = text
-    write_notes(all_notes)
-    st.success("Saved successfully!")
+with left:
+    st.subheader("Calendar")
 
-# -----------------------------
-# Show current note info
-# -----------------------------
-st.write("---")
-st.subheader("Current Saved Entry")
-if existing_text:
-    st.write(existing_text)
-else:
-    st.write("No entry saved for this date yet.")
+    year = st.session_state.cal_year
+    month = st.session_state.cal_month
 
+    # Navigation
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        if st.button("← Prev"):
+            if month == 1:
+                month = 12
+                year -= 1
+            else:
+                month -= 1
+            st.session_state.cal_year = year
+            st.session_state.cal_month = month
+            st.experimental_rerun()
+
+    with c2:
+        st.write(f"**{pycal.month_name[month]} {year}**")
+
+    with c3:
+        if st.button("Next →"):
+            if month == 12:
+                month = 1
+                year += 1
+            else:
+                month += 1
+            st.session_state.cal_year = year
+            st.session_state.cal_month = month
+            st.experimental_rerun()
+
+    # Days of week hea
